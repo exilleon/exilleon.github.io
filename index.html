@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpendSense - Learn Accounting</title>
+  <style>
+    :root {
+      --bg-color: #d9f2e6;
+      --primary-gradient-start: #004d40;
+      --primary-gradient-end: #1b5e20;
+      --button-gradient-start: #2e7d32;
+      --button-gradient-end: #43a047;
+      --text-light: #e8f5e9;
+      --text-medium: #c8e6c9;
+      --text-dark: #1b5e20;
+      --card-bg-light: rgba(255, 255, 255, 0.15);
+      --card-bg-lighter: rgba(255, 255, 255, 0.12);
+      --card-bg-lightest: rgba(255, 255, 255, 0.1);
+      --input-bg: rgba(255, 255, 255, 0.2);
+      --progress-bg: rgba(255, 255, 255, 0.3);
+      --correct-answer: rgba(76, 175, 80, 0.7);
+      --incorrect-answer: rgba(244, 67, 54, 0.7);
+      --progress-fill: #00e676;
+      --box-shadow-color: rgba(0, 0, 0, 0.4);
+      --inner-shadow-color: rgba(0, 0, 0, 0.3);
+      --notch-bg: #111;
+    }
+
+    .dark-mode {
+      --bg-color: #121212;
+      --primary-gradient-start: #0d3b2e;
+      --primary-gradient-end: #1a4d3a;
+      --button-gradient-start: #1e5d2e;
+      --button-gradient-end: #2d7d3c;
+      --text-light: #e0e0e0;
+      --text-medium: #b0b0b0;
+      --text-dark: #c8e6c9;
+      --card-bg-light: rgba(50, 50, 50, 0.4);
+      --card-bg-lighter: rgba(50, 50, 50, 0.3);
+      --card-bg-lightest: rgba(50, 50, 50, 0.2);
+      --input-bg: rgba(80, 80, 80, 0.5);
+      --progress-bg: rgba(80, 80, 80, 0.5);
+      --correct-answer: rgba(30, 70, 30, 0.8);
+      --incorrect-answer: rgba(70, 30, 30, 0.8);
+      --progress-fill: #26a69a;
+      --box-shadow-color: rgba(0, 0, 0, 0.6);
+      --inner-shadow-color: rgba(0, 0, 0, 0.4);
+      --notch-bg: #222;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      background: var(--bg-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      transition: background 0.3s ease;
+    }
+
+    .phone {
+      width: 375px;
+      height: 700px;
+      background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+      border-radius: 40px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 15px 40px var(--box-shadow-color);
+      display: flex;
+      flex-direction: column;
+      color: var(--text-light);
+      transition: all 0.3s ease;
+    }
+
+    .notch {
+      width: 160px;
+      height: 25px;
+      background: var(--notch-bg);
+      border-radius: 0 0 20px 20px;
+      margin: 0 auto;
+      margin-top: 10px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+    .logo-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--button-gradient-start), var(--button-gradient-end));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-light);
+      box-shadow: 0 4px 12px var(--inner-shadow-color);
+    }
+    .logo-text {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-light);
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.4);
+    }
+
+    .screen {
+      display: none;
+      flex: 1;
+      padding: 1.5rem;
+      text-align: center;
+      overflow-y: auto;
+      animation: fadeIn 0.5s ease;
+    }
+    .active {
+      display: block;
+    }
+
+    h1, h2 {
+      margin-bottom: 1rem;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+      color: var(--text-light);
+    }
+    p {
+      color: var(--text-medium);
+    }
+
+    button {
+      display: inline-block;
+      margin: 0.5rem auto;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 25px;
+      background: linear-gradient(135deg, var(--button-gradient-start), var(--button-gradient-end));
+      color: var(--text-light);
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 15px var(--inner-shadow-color);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .feature-card {
+      background: var(--card-bg-light);
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+      font-size: 1rem;
+      backdrop-filter: blur(8px);
+      transition: transform 0.3s, background 0.3s;
+      color: var(--text-light);
+    }
+    .feature-card:hover {
+      transform: translateY(-5px) scale(1.03);
+      background: var(--card-bg-light);
+      opacity: 0.9;
+    }
+
+    .settings, .flashcard, .quiz, .budget, .goal, .profile {
+      text-align: left;
+      background: var(--card-bg-lighter);
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      backdrop-filter: blur(8px);
+      color: var(--text-light);
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+      color: var(--text-medium);
+    }
+    input {
+      width: 100%;
+      padding: 0.6rem;
+      margin-top: 0.5rem;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 0.9rem;
+      background: var(--input-bg);
+      color: var(--text-light);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .flashcard-box {
+      background: #ffffff;
+      color: var(--text-dark);
+      text-align: center;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      font-weight: bold;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .dark-mode .flashcard-box {
+      background: #333333;
+      color: #e0f2f1;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .quiz-option {
+      background: var(--input-bg);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 0.5rem;
+      cursor: pointer;
+      color: var(--text-light);
+      transition: all 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .quiz-option:hover {
+      background: var(--card-bg-light);
+    }
+    .quiz-option.correct {
+      background: var(--correct-answer);
+      color: white;
+    }
+    .quiz-option.incorrect {
+      background: var(--incorrect-answer);
+      color: white;
+    }
+
+    .progress-bar {
+      background: var(--progress-bg);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .progress-fill {
+      height: 10px;
+      background: var(--progress-fill);
+      width: 40%;
+    }
+
+    .add-flashcard-form {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: var(--card-bg-lightest);
+      border-radius: 12px;
+    }
+
+    .flashcard-nav {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 10;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone">
+    <div class="notch"></div>
+    
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+
+    <!-- Welcome Screen -->
+    <div id="welcome" class="screen active">
+      <div class="logo">
+        <div class="logo-icon">SS</div>
+        <div class="logo-text">SpendSense</div>
+      </div>
+      <h1>📊 Welcome!</h1>
+      <p>Learn accounting principles with interactive financial tools 💼 <br>Track your expenses, set budgets, and achieve your financial goals!</p>
+      <button onclick="showScreen('features')">Start Learning</button>
+      <p>Author: Rillera, Stradlin Kurt N. <br>Section: BS Info Tech 3A <br>Subject: ITPE 105<br> Submitted to: Ma'am Parrocha</p>
+    </div>
+
+    <!-- Feature Screen -->
+    <div id="features" class="screen">
+      <h2>Features</h2>
+      <div class="feature-grid">
+        <div class="feature-card" onclick="showScreen('flashcards')">📚 Flashcards</div>
+        <div class="feature-card" onclick="showScreen('quizzes')">📝 Quizzes</div>
+        <div class="feature-card" onclick="showScreen('budget')">💰 Budget Tracker</div>
+        <div class="feature-card" onclick="showScreen('goal')">🎯 Saving Goal</div>
+      </div>
+      <br>
+      <button onclick="showScreen('profile')">👤 User Profile</button>
+      <button onclick="showScreen('settings')">⚙️ User Settings</button>
+      <button onclick="showScreen('welcome')">⬅️ Back</button>
+    </div>
+
+    <!-- Flashcards -->
+    <div id="flashcards" class="screen">
+      <h2>📚 Flashcards</h2>
+      <div class="flashcard-box" id="currentFlashcard">
+        <div id="flashQuestion">Q: What is the Accounting Equation?</div>
+        <div id="flashAnswer" style="display:none;">A: Assets = Liabilities + Equity</div>
+        <em id="flipHint">Tap flip to see answer</em>
+      </div>
+      <button onclick="toggleFlash()">🔄 Flip</button>
+      <div class="flashcard-nav">
+        <button onclick="prevFlashcard()">⬅️ Previous</button>
+        <span id="flashcardCounter">1/3</span>
+        <button onclick="nextFlashcard()">Next ➡️</button>
+      </div>
+      <button onclick="showScreen('addFlashcard')">➕ Add Flashcard</button>
+      <button onclick="showScreen('features')">⬅️ Back</button>
+    </div>
+
+    <!-- Add Flashcard -->
+    <div id="addFlashcard" class="screen">
+      <h2>➕ Add New Flashcard</h2>
+      <div class="add-flashcard-form">
+        <label for="newQuestion">Question:</label>
+        <input type="text" id="newQuestion" placeholder="Enter your question">
+        
+        <label for="newAnswer">Answer:</label>
+        <input type="text" id="newAnswer" placeholder="Enter the answer">
+        
+        <button onclick="addFlashcard()">💾 Save Flashcard</button>
+        <button onclick="showScreen('flashcards')">⬅️ Back to Flashcards</button>
+      </div>
+    </div>
+
+    <!-- Quizzes -->
+    <div id="quizzes" class="screen">
+      <h2>📝 Quiz</h2>
+      <div id="quizContainer">
+        <p id="currentQuestion"><strong>Q1:</strong> Revenue is recorded when...</p>
+        <div id="quizOptions">
+          <div class="quiz-option" data-correct="true" onclick="checkAnswer(this, true)">It is earned</div>
+          <div class="quiz-option" data-correct="false" onclick="checkAnswer(this, false)">Cash is received</div>
+          <div class="quiz-option" data-correct="false" onclick="checkAnswer(this, false)">Invoice is prepared</div>
+        </div>
+      </div>
+      <div id="quizProgress">Question 1 of 3</div>
+      <button id="nextQuestionBtn" style="display:none;" onclick="nextQuestion()">Next Question ➡️</button>
+      <button onclick="showScreen('features')">⬅️ Back</button>
+    </div>
+
+    <!-- Budget Tracker -->
+    <div id="budget" class="screen">
+      <h2>💰 Budget Tracker</h2>
+      <div class="budget">
+        <label>Income:</label>
+        <input type="number" id="income" placeholder="Enter your income">
+        <label>Expenses:</label>
+        <input type="number" id="expenses" placeholder="Enter your expenses">
+        <div class="progress-bar">
+          <div class="progress-fill" id="budgetBar"></div>
+        </div>
+      </div>
+      <button onclick="updateBudget()">📊 Update</button>
+      <button onclick="showScreen('features')">⬅️ Back</button>
+    </div>
+
+    <!-- Saving Goal -->
+    <div id="goal" class="screen">
+      <h2>🎯 Saving Goal</h2>
+      <div class="goal">
+        <label>Goal Amount:</label>
+        <input type="number" id="goalAmount" placeholder="Enter target">
+        <label>Current Savings:</label>
+        <input type="number" id="currentSavings" placeholder="Enter saved amount">
+        <div class="progress-bar">
+          <div class="progress-fill" id="goalBar" style="width:20%;"></div>
+        </div>
+      </div>
+      <button onclick="updateGoal()">📊 Update</button>
+      <button onclick="showScreen('features')">⬅️ Back</button>
+    </div>
+
+    <!-- Settings -->
+    <div id="settings" class="screen">
+      <h2>⚙️ User Settings</h2>
+      <div class="settings">
+        <label for="username">👤 Username</label>
+        <input type="text" id="username" placeholder="Enter your name">
+
+        <label for="email">📧 Email</label>
+        <input type="email" id="email" placeholder="Enter your email">
+
+        <label for="theme">🎨 Theme</label>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button onclick="setTheme('light')">☀️ Light</button>
+          <button onclick="setTheme('dark')">🌙 Dark</button>
+        </div>
+
+        <button onclick="saveSettings()">💾 Save Settings</button>
+        <button onclick="showScreen('features')">⬅️ Back</button>
+      </div>
+    </div>
+
+    <!-- User Profile / Summary -->
+    <div id="profile" class="screen">
+      <h2>👤 User Profile</h2>
+      <div class="profile">
+        <h3 id="profileName">Stradlin Kurt Rillera</h3>
+        <p>📧 hexaine@example.com</p>
+        <p>🎓 Level: Intermediate</p>
+
+        <label>📊 Lesson Progress</label>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 65%;"></div>
+        </div>
+        <small>65% completed</small>
+
+        <label>💰 Budget Health</label>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 50%; background:#ffeb3b;"></div>
+        </div>
+        <small>Balanced</small>
+
+        <label>🎯 Saving Goal</label>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 30%; background:#29b6f6;"></div>
+        </div>
+        <small>₱3,000 of ₱10,000</small>
+      </div>
+      <button onclick="showScreen('features')">⬅️ Back</button>
+    </div>
+
+  </div>
+
+  <script>
+    // Theme Management
+    function toggleTheme() {
+      const body = document.body;
+      const themeToggle = document.getElementById('themeToggle');
+      
+      if (body.classList.contains('dark-mode')) {
+        body.classList.remove('dark-mode');
+        themeToggle.textContent = '🌙 Dark Mode';
+        localStorage.setItem('theme', 'light');
+      } else {
+        body.classList.add('dark-mode');
+        themeToggle.textContent = '☀️ Light Mode';
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+    
+    function setTheme(theme) {
+      const body = document.body;
+      const themeToggle = document.getElementById('themeToggle');
+      
+      if (theme === 'dark') {
+        body.classList.add('dark-mode');
+        themeToggle.textContent = '☀️ Light Mode';
+        localStorage.setItem('theme', 'dark');
+      } else {
+        body.classList.remove('dark-mode');
+        themeToggle.textContent = '🌙 Dark Mode';
+        localStorage.setItem('theme', 'light');
+      }
+    }
+    
+    // Load saved theme on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme');
+      const themeToggle = document.getElementById('themeToggle');
+      
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeToggle.textContent = '☀️ Light Mode';
+      } else {
+        themeToggle.textContent = '🌙 Dark Mode';
+      }
+    });
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+      
+      // Reset quiz if returning to quiz screen
+      if (screenId === 'quizzes') {
+        currentQuestionIndex = 0;
+        updateQuiz();
+      }
+    }
+
+    // Flashcard functionality
+    let currentFlashcardIndex = 0;
+    let isFlipped = false;
+    
+    const flashcards = [
+      {
+        question: "Q: What is the Accounting Equation?",
+        answer: "A: Assets = Liabilities + Equity"
+      },
+      {
+        question: "Q: What are the three main financial statements?",
+        answer: "A: Balance Sheet, Income Statement, and Cash Flow Statement"
+      },
+      {
+        question: "Q: What does GAAP stand for?",
+        answer: "A: Generally Accepted Accounting Principles"
+      }
+    ];
+
+    function toggleFlash() {
+      const answerElement = document.getElementById("flashAnswer");
+      const hintElement = document.getElementById("flipHint");
+      
+      isFlipped = !isFlipped;
+      
+      if (isFlipped) {
+        answerElement.style.display = "block";
+        hintElement.style.display = "none";
+      } else {
+        answerElement.style.display = "none";
+        hintElement.style.display = "block";
+      }
+    }
+
+    function updateFlashcard() {
+      document.getElementById("flashQuestion").textContent = flashcards[currentFlashcardIndex].question;
+      document.getElementById("flashAnswer").textContent = flashcards[currentFlashcardIndex].answer;
+      document.getElementById("flashAnswer").style.display = "none";
+      document.getElementById("flipHint").style.display = "block";
+      document.getElementById("flashcardCounter").textContent = (currentFlashcardIndex + 1) + "/" + flashcards.length;
+      isFlipped = false;
+    }
+
+    function nextFlashcard() {
+      if (currentFlashcardIndex < flashcards.length - 1) {
+        currentFlashcardIndex++;
+        updateFlashcard();
+      }
+    }
+
+    function prevFlashcard() {
+      if (currentFlashcardIndex > 0) {
+        currentFlashcardIndex--;
+        updateFlashcard();
+      }
+    }
+
+    function addFlashcard() {
+      const question = document.getElementById("newQuestion").value.trim();
+      const answer = document.getElementById("newAnswer").value.trim();
+      
+      if (question && answer) {
+        flashcards.push({
+          question: "Q: " + question,
+          answer: "A: " + answer
+        });
+        
+        // Clear the form
+        document.getElementById("newQuestion").value = "";
+        document.getElementById("newAnswer").value = "";
+        
+        alert("Flashcard added successfully!");
+        showScreen('flashcards');
+      } else {
+        alert("Please enter both a question and an answer.");
+      }
+    }
+
+    // Quiz functionality
+    let currentQuestionIndex = 0;
+    let quizCompleted = false;
+    
+    const quizQuestions = [
+      {
+        question: "Revenue is recorded when...",
+        options: ["It is earned", "Cash is received", "Invoice is prepared"],
+        correctAnswer: 0
+      },
+      {
+        question: "Which of these is a current asset?",
+        options: ["Building", "Equipment", "Accounts Receivable"],
+        correctAnswer: 2
+      },
+      {
+        question: "Depreciation is recorded to...",
+        options: ["Increase asset value", "Allocate cost over useful life", "Reduce tax immediately"],
+        correctAnswer: 1
+      }
+    ];
+
+    function checkAnswer(element, isCorrect) {
+      // Disable all options
+      document.querySelectorAll('.quiz-option').forEach(option => {
+        option.style.pointerEvents = 'none';
+      });
+      
+      // Highlight selected answer
+      if (isCorrect) {
+        element.classList.add('correct');
+        setTimeout(() => {
+          document.getElementById('nextQuestionBtn').style.display = 'inline-block';
+        }, 1000);
+      } else {
+        element.classList.add('incorrect');
+        // Highlight correct answer
+        const correctOption = document.querySelector(`.quiz-option[data-correct="true"]`);
+        if (correctOption) {
+          setTimeout(() => {
+            correctOption.classList.add('correct');
+          }, 1000);
+        }
+      }
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      
+      if (currentQuestionIndex < quizQuestions.length) {
+        updateQuiz();
+      } else {
+        // Quiz completed
+        alert("🎉 Congratulations! You've completed the quiz!");
+        currentQuestionIndex = 0;
+        updateQuiz();
+      }
+    }
+
+    function updateQuiz() {
+      // Reset options
+      document.querySelectorAll('.quiz-option').forEach(option => {
+        option.classList.remove('correct', 'incorrect');
+        option.style.pointerEvents = 'auto';
+      });
+      
+      document.getElementById('nextQuestionBtn').style.display = 'none';
+      
+      // Update question
+      const currentQuestion = quizQuestions[currentQuestionIndex];
+      document.getElementById('currentQuestion').innerHTML = `<strong>Q${currentQuestionIndex + 1}:</strong> ${currentQuestion.question}`;
+      
+      // Update options
+      const optionsContainer = document.getElementById('quizOptions');
+      optionsContainer.innerHTML = '';
+      
+      currentQuestion.options.forEach((option, index) => {
+        const optionElement = document.createElement('div');
+        optionElement.className = 'quiz-option';
+        optionElement.textContent = option;
+        optionElement.setAttribute('data-correct', index === currentQuestion.correctAnswer);
+        optionElement.onclick = function() {
+          checkAnswer(this, index === currentQuestion.correctAnswer);
+        };
+        optionsContainer.appendChild(optionElement);
+      });
+      
+      // Update progress
+      document.getElementById('quizProgress').textContent = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
+    }
+
+    function updateBudget() {
+      const income = parseFloat(document.getElementById("income").value) || 0;
+      const expenses = parseFloat(document.getElementById("expenses").value) || 0;
+      let ratio = income > 0 ? ((income - expenses) / income) * 100 : 0;
+      ratio = Math.max(0, Math.min(100, ratio));
+      document.getElementById("budgetBar").style.width = ratio + "%";
+    }
+
+    function updateGoal() {
+      const goal = parseFloat(document.getElementById("goalAmount").value) || 1;
+      const saved = parseFloat(document.getElementById("currentSavings").value) || 0;
+      let ratio = (saved / goal) * 100;
+      ratio = Math.max(0, Math.min(100, ratio));
+      document.getElementById("goalBar").style.width = ratio + "%";
+    }
+    
+    function saveSettings() {
+      const username = document.getElementById("username").value;
+      const email = document.getElementById("email").value;
+      
+      // Save to localStorage (in a real app, you'd save to a server)
+      localStorage.setItem('username', username);
+      localStorage.setItem('email', email);
+      
+      // Update profile display
+      if (username) {
+        document.getElementById("profileName").textContent = username;
+      }
+      
+      alert('Settings Saved!');
+    }
+    
+    // Initialize flashcard
+    updateFlashcard();
+  </script>
+
+</body>
+</html>
