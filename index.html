@@ -59,6 +59,44 @@
     max-width: 120px;
     border-radius: 4px;
   }
+  #streamControls {
+    margin: 20px 0 30px;
+    padding: 16px;
+    border: 1px solid #e2e2e2;
+    border-radius: 8px;
+    background: #fafafa;
+  }
+  #streamControls h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+  }
+  #streamControls label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  #streamControls input {
+    width: 100%;
+    margin-top: 6px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  #streamControls .buttonRow {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  #streamControls .secondary {
+    background-color: #6c757d;
+  }
+  #streamControls .hint {
+    font-size: 12px;
+    color: #666;
+    margin-top: 10px;
+  }
   #articleView {
     max-width: 720px;
     margin: 60px auto;
@@ -103,6 +141,22 @@
   <video id="cameraPreview" autoplay playsinline></video>
   <h2>Admin Panel</h2>
   <p>Capture snapshots to log date, time, device type, IP address, and the captured image.</p>
+  <div id="streamControls">
+    <h3>Remote Stream Setup</h3>
+    <label>
+      Remote video stream URL
+      <input id="streamUrlInput" type="url" placeholder="e.g. http://192.168.1.20:8080/video" autocomplete="off">
+    </label>
+    <label>
+      Snapshot endpoint (optional)
+      <input id="snapshotUrlInput" type="url" placeholder="e.g. http://192.168.1.20:8080/shot.jpg" autocomplete="off">
+    </label>
+    <div class="buttonRow">
+      <button id="applyStreamButton" class="secondary" type="button">Use Remote Stream</button>
+      <button id="useLocalButton" class="secondary" type="button">Use Local Camera</button>
+    </div>
+    <p class="hint">Ensure your phone and laptop share the same network. Start a streaming app on the phone (IP Webcam, EpocCam, DroidCam, Iriun), copy the URL it shows, and paste it here. Use the snapshot endpoint if the app provides one for still images.</p>
+  </div>
   <button id="captureButton" disabled>Loading camera...</button>
   <table>
     <thead>
@@ -127,18 +181,25 @@ const captureButton = document.getElementById('captureButton');
 const captureTableBody = document.getElementById('captureTableBody');
 const articleView = document.getElementById('articleView');
 const adminDashboard = document.getElementById('adminDashboard');
+const streamUrlInput = document.getElementById('streamUrlInput');
+const snapshotUrlInput = document.getElementById('snapshotUrlInput');
+const applyStreamButton = document.getElementById('applyStreamButton');
+const useLocalButton = document.getElementById('useLocalButton');
 
 let activeStream = null;
 let userIpAddress = 'Loading...';
 let captureCount = 0;
 const captureCanvas = document.createElement('canvas');
 const captureContext = captureCanvas.getContext('2d');
+let remoteSnapshotUrl = '';
+let currentMode = 'local';
 
 async function startCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     cameraPreview.srcObject = stream;
     activeStream = stream;
+    cameraPreview.removeAttribute('src');
     captureButton.textContent = 'Capture Snapshot';
     captureButton.disabled = false;
     cameraPreview.addEventListener('loadedmetadata', () => {
@@ -174,7 +235,7 @@ function detectDeviceType() {
   return 'Unknown';
 }
 
-function recordCapture() {
+async function recordCapture() {
   if (!activeStream) {
     alert('Camera stream not ready.');
     return;
@@ -185,8 +246,52 @@ function recordCapture() {
     captureCanvas.height = cameraPreview.videoHeight || 480;
   }
 
-  captureContext.drawImage(cameraPreview, 0, 0, captureCanvas.width, captureCanvas.height);
-  const snapshotDataUrl = captureCanvas.toDataURL('image/png');
+  let snapshotDataUrl = null;
+
+  if (currentMode === 'local') {
+    captureContext.drawImage(cameraPreview, 0, 0, captureCanvas.width, captureCanvas.height);
+    snapshotDataUrl = captureCanvas.toDataURL('image/png');
+  } else {
+    snapshotDataUrl = null;
+    try {
+      captureContext.drawImage(cameraPreview, 0, 0, captureCanvas.width, captureCanvas.height);
+      snapshotDataUrl = captureCanvas.toDataURL('image/png');
+    } catch (drawErr) {
+      if (remoteSnapshotUrl) {
+        captureButton.disabled = true;
+        captureButton.textContent = 'Fetching snapshot...';
+        snapshotDataUrl = null;
+        try {
+          const response = await fetch(`${remoteSnapshotUrl}?ts=${Date.now()}`, { mode: 'cors' });
+          if (!response.ok) throw new Error('Snapshot fetch failed');
+          const blob = await response.blob();
+          const imageBitmap = await createImageBitmap(blob);
+          captureCanvas.width = imageBitmap.width;
+          captureCanvas.height = imageBitmap.height;
+          captureContext.drawImage(imageBitmap, 0, 0);
+          snapshotDataUrl = captureCanvas.toDataURL('image/png');
+        } catch (fetchErr) {
+          alert('Unable to capture snapshot from remote stream. Check CORS settings or provide a snapshot endpoint that allows cross-origin access.');
+          console.error(fetchErr);
+          captureButton.disabled = false;
+          captureButton.textContent = 'Capture Snapshot';
+          return;
+        } finally {
+          captureButton.disabled = false;
+          captureButton.textContent = 'Capture Snapshot';
+        }
+      } else {
+        alert('Remote stream does not allow direct capture. Provide a snapshot endpoint.');
+        console.error(drawErr);
+        return;
+      }
+    }
+  }
+
+  if (!snapshotDataUrl) {
+    alert('Failed to capture snapshot.');
+    return;
+  }
 
   const now = new Date();
   const dateString = now.toLocaleDateString();
@@ -247,6 +352,52 @@ document.addEventListener('keydown', (event) => {
     window.open(adminUrl.toString(), '_blank', 'noopener');
   }
 });
+
+function stopLocalStream() {
+  if (activeStream) {
+    activeStream.getTracks().forEach(track => track.stop());
+  }
+  activeStream = null;
+}
+
+async function switchToLocalCamera() {
+  currentMode = 'local';
+  remoteSnapshotUrl = '';
+  captureButton.textContent = 'Loading camera...';
+  captureButton.disabled = true;
+  cameraPreview.src = '';
+  stopLocalStream();
+  await startCamera();
+}
+
+function switchToRemoteStream() {
+  const streamUrl = streamUrlInput.value.trim();
+  remoteSnapshotUrl = snapshotUrlInput.value.trim();
+
+  if (!streamUrl) {
+    alert('Enter a remote video stream URL first.');
+    return;
+  }
+
+  stopLocalStream();
+  currentMode = 'remote';
+  captureButton.disabled = true;
+  captureButton.textContent = 'Connecting to stream...';
+  cameraPreview.srcObject = null;
+  cameraPreview.src = streamUrl;
+  cameraPreview.load();
+  cameraPreview.play().then(() => {
+    captureButton.disabled = false;
+    captureButton.textContent = 'Capture Snapshot';
+  }).catch(err => {
+    alert('Unable to play remote stream. Check the URL and ensure the stream is reachable.');
+    console.error(err);
+    captureButton.textContent = 'Stream unavailable';
+  });
+}
+
+applyStreamButton.addEventListener('click', switchToRemoteStream);
+useLocalButton.addEventListener('click', switchToLocalCamera);
 </script>
 
 </body>
